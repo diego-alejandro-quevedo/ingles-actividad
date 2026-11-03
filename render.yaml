@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: passive-voice-quest
+    runtime: static
+    staticPublishPath: ./public
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=300
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

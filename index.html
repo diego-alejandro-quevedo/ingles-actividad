@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passive Voice Quest</title>
+<style>
+:root{
+  --blue:#2563c7; --navy:#1b2540; --teal:#17a2a8; --orange:#ee8132; --green:#1f9065;
+  --red:#d64545; --bg:#f0f5fc; --card:#ffffff; --soft:#eef4fc; --muted:#5a6578;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--navy);min-height:100vh}
+.topbar{height:10px;background:var(--blue)}
+.wrap{max-width:860px;margin:0 auto;padding:18px 16px 60px}
+.hidden{display:none!important}
+.kicker{color:var(--teal);font-weight:800;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:clamp(1.9rem,5vw,2.8rem);margin:.2em 0 .1em}
+h2{margin:.2em 0 .4em}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border-radius:18px;box-shadow:0 4px 14px rgba(27,37,64,.10);padding:20px;margin-bottom:16px}
+.grid{display:grid;gap:12px}
+.modes{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.mode{background:var(--soft);border:2px solid transparent;border-radius:14px;padding:14px;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:.15s}
+.mode:hover{transform:translateY(-2px);border-color:var(--blue)}
+.mode.sel{border-color:var(--blue);background:#e3edfb}
+.mode b{display:block;font-size:1.05rem;margin-bottom:4px}
+.mode small{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.opt{display:flex;gap:8px;align-items:center;font-weight:600}
+select,input[type=text]{font:inherit;padding:10px 12px;border-radius:10px;border:2px solid #cfd9ea;background:#fff;color:var(--navy)}
+input[type=text]{width:100%}
+select:focus,input[type=text]:focus{outline:none;border-color:var(--blue)}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 22px;font:inherit;font-weight:700;cursor:pointer;transition:.15s}
+.btn:hover{filter:brightness(1.08)}
+.btn.alt{background:var(--orange)}
+.btn.ghost{background:#dfe8f7;color:var(--navy)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.hud{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
+.pill{background:#fff;border-radius:999px;padding:6px 14px;font-weight:700;box-shadow:0 2px 6px rgba(27,37,64,.08)}
+.pill.team{background:var(--navy);color:#fff}
+.bar{height:10px;background:#dbe5f5;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar>i{display:block;height:100%;width:100%;background:var(--teal);transition:width .25s linear}
+.bar>i.low{background:var(--red)}
+.prog{height:6px;background:#dbe5f5;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.prog>i{display:block;height:100%;background:var(--blue);transition:width .3s}
+.q-title{font-size:1.5rem;font-weight:800;margin:6px 0 14px}
+.q-sent{font-size:1.6rem;font-weight:800;color:var(--blue);margin:8px 0 14px;line-height:1.35}
+.choice{display:block;width:100%;text-align:left;background:var(--soft);border:2px solid transparent;border-radius:14px;padding:14px 16px;margin-bottom:10px;font:inherit;font-weight:700;font-size:1.1rem;color:var(--navy);cursor:pointer;transition:.15s}
+.choice:hover:not(:disabled){border-color:var(--blue);transform:translateX(3px)}
+.choice .n{display:inline-block;width:28px;color:var(--teal)}
+.choice.ok{background:#dff3ea;border-color:var(--green);color:#16694a}
+.choice.bad{background:#fbe3e3;border-color:var(--red);color:#9b2b2b}
+.fillrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.fillrow .choice{text-align:center;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:10px;min-height:56px;padding:10px;border-radius:14px}
+.chips.bank{background:var(--soft)}
+.chips.ans{background:#fff;border:2px dashed #b8c8e4;min-height:70px}
+.chip{background:var(--blue);color:#fff;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:700;font-size:1.05rem;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.chip.in{background:var(--orange)}
+.lbl{font-size:.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px}
+.feedback{border-radius:14px;padding:14px 16px;margin-top:14px;font-weight:600}
+.feedback.ok{background:#dff3ea;color:#16694a}
+.feedback.bad{background:#fbe3e3;color:#8a2a2a}
+.feedback.part{background:#fff1e2;color:#8a4a10}
+.feedback .ans{font-size:1.1rem;font-weight:800;display:block;margin:4px 0}
+.feedback small{display:block;font-weight:500;opacity:.9;margin-top:6px}
+.checks{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.checks span{background:#fff;border-radius:8px;padding:4px 10px;font-weight:700;font-size:.9rem}
+.formula{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.formula span{padding:6px 12px;border-radius:10px;font-weight:800;background:var(--soft)}
+.formula .r{color:var(--blue)}.formula .b{color:var(--teal)}.formula .v{color:var(--orange)}
+.score-big{font-size:3.2rem;font-weight:900;color:var(--blue)}
+.stars{font-size:2.4rem;letter-spacing:6px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:8px 10px;text-align:left;border-bottom:1px solid #e3eaf5}
+.center{text-align:center}
+.mt{margin-top:14px}
+.rule{background:#fff;border-left:6px solid var(--teal);border-radius:12px;padding:12px 16px}
+@media(max-width:520px){.fillrow{grid-template-columns:repeat(2,1fr)}.q-sent{font-size:1.3rem}}
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+<div class="wrap">
+
+  <!-- MENÚ -->
+  <section id="menu">
+    <div class="kicker">Grammar game • Voces en inglés</div>
+    <h1>Passive Voice Quest</h1>
+    <p class="sub">Repasa la voz activa y la pasiva: <b>receiver + BE + past participle (V3)</b>.</p>
+
+    <div class="card">
+      <h2>1. Elige un reto</h2>
+      <div class="grid modes" id="modes">
+        <button class="mode sel" data-mode="mix"><b>🎯 Mixto</b><small>10 preguntas de todos los tipos</small></button>
+        <button class="mode" data-mode="detect"><b>🔎 Detective</b><small>¿Cuál oración es pasiva?</small></button>
+        <button class="mode" data-mode="fill"><b>✏️ Completa</b><small>is / are / was / were</small></button>
+        <button class="mode" data-mode="make"><b>🔄 Makeover</b><small>Reescribe de activa a pasiva</small></button>
+        <button class="mode" data-mode="build"><b>🧩 Arma la oración</b><small>Ordena las piezas</small></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Configura la partida</h2>
+      <div class="row">
+        <label class="opt">Jugadores:
+          <select id="players">
+            <option value="1">Individual</option>
+            <option value="2">2 equipos</option>
+            <option value="3">3 equipos</option>
+            <option value="4">4 equipos</option>
+          </select>
+        </label>
+        <label class="opt"><input type="checkbox" id="useTimer" checked> Con tiempo</label>
+        <label class="opt"><input type="checkbox" id="useSound" checked> Sonido</label>
+      </div>
+      <div id="teamNames" class="row mt hidden"></div>
+      <div class="mt row">
+        <button class="btn alt" id="startBtn">▶ Empezar</button>
+        <span class="pill" id="bestPill"></span>
+      </div>
+    </div>
+
+    <div class="card rule">
+      <b>Recuerda:</b>
+      <div class="formula"><span class="r">RECEIVER</span><span class="b">BE (is/are/was/were)</span><span class="v">PAST PARTICIPLE (V3)</span></div>
+      Presente → <b>am / is / are + V3</b> &nbsp;•&nbsp; Pasado → <b>was / were + V3</b>
+    </div>
+  </section>
+
+  <!-- JUEGO -->
+  <section id="game" class="hidden">
+    <div class="hud">
+      <span class="pill" id="hudQ">1/10</span>
+      <span class="pill team hidden" id="hudTeam"></span>
+      <span class="pill" id="hudScore">⭐ 0</span>
+      <span class="pill" id="hudStreak">🔥 0</span>
+    </div>
+    <div class="prog"><i id="prog"></i></div>
+    <div class="bar" id="timerBar"><i id="timer"></i></div>
+    <div class="card" id="qCard">
+      <div class="kicker" id="qKicker"></div>
+      <div id="qArea"></div>
+      <div id="fb"></div>
+      <div class="mt center"><button class="btn hidden" id="nextBtn">Siguiente →</button></div>
+    </div>
+    <div id="scoreboard" class="card hidden"></div>
+    <button class="btn ghost" id="quitBtn">← Salir al menú</button>
+  </section>
+
+  <!-- FIN -->
+  <section id="end" class="hidden">
+    <div class="card center">
+      <div class="kicker">Resultado</div>
+      <h1 id="endTitle">¡Buen trabajo!</h1>
+      <div class="stars" id="endStars"></div>
+      <div class="score-big" id="endScore">0</div>
+      <p id="endDetail" class="sub"></p>
+      <div id="endTeams"></div>
+      <div class="row mt" style="justify-content:center">
+        <button class="btn alt" id="againBtn">🔁 Jugar otra vez</button>
+        <button class="btn ghost" id="menuBtn">Menú</button>
+      </div>
+    </div>
+    <div class="card rule"><b>Exit ticket:</b> escribe UNA oración pasiva sobre tu colegio. Subraya BE y encierra V3.</div>
+  </section>
+</div>
+
+<script>
+"use strict";
+/* ============ BANCO DE PREGUNTAS ============ */
+const DETECT = [
+  ["The teacher explains the rule.","The rule is explained by the teacher.","The teacher is explaining the rule.",1],
+  ["The cake was baked by my aunt.","My aunt baked the cake.","My aunt is baking the cake.",0],
+  ["They are building a school.","They built a school.","A school was built last year.",2],
+  ["The window was broken.","A student broke the window.","A student is breaking the window.",0],
+  ["The chef cooks the meal.","The meal is cooked by the chef.","The chef is cooking the meal.",1],
+  ["Songs are played at parties.","People play songs at parties.","People are playing songs.",0],
+  ["Coffee is grown in Colombia.","Farmers grow coffee in Colombia.","Farmers are growing coffee.",0],
+  ["Someone stole my bike.","Someone is stealing my bike.","My bike was stolen.",2],
+  ["The letters were written by Ana.","Ana writes the letters.","Ana wrote the letters.",0],
+  ["The students clean the room.","The room is cleaned every day.","The students are cleaning the room.",1],
+  ["We found the trophy.","The trophy was found last night.","We are finding the trophy.",1],
+  ["Many movies are made in Bogotá.","They make many movies in Bogotá.","They made many movies in Bogotá.",0]
+].map(a=>({type:"detect",opts:a.slice(0,3),ans:a[3]}));
+
+const FILL = [
+  ["English ___ spoken in many countries.","is"],
+  ["The windows ___ cleaned yesterday.","were"],
+  ["The trophy ___ found last night.","was"],
+  ["Songs ___ played at parties.","are"],
+  ["The bridge ___ built in 1990.","was"],
+  ["Spanish ___ spoken in Colombia.","is"],
+  ["These cars ___ made in Japan last year.","were"],
+  ["Pizza ___ eaten all over the world.","is"],
+  ["Those books ___ written in 2010.","were"],
+  ["Homework ___ checked every Monday.","is"],
+  ["The tickets ___ sold yesterday.","were"],
+  ["Flowers ___ sold in this shop every day.","are"]
+].map(a=>({type:"fill",s:a[0],ans:a[1]}));
+
+const MAKE = [
+  ["People speak Spanish in Colombia.","Spanish is spoken in Colombia.","Spanish","is","spoken"],
+  ["Someone stole the bicycle yesterday.","The bicycle was stolen yesterday.","The bicycle","was","stolen"],
+  ["The students clean the classroom every day.","The classroom is cleaned every day.","The classroom","is","cleaned"],
+  ["A chef cooks the meal.","The meal is cooked by the chef.","The meal","is","cooked"],
+  ["The teacher explains the rule.","The rule is explained by the teacher.","The rule","is","explained"],
+  ["Workers built the bridge in 1990.","The bridge was built in 1990.","The bridge","was","built"],
+  ["They found the trophy last night.","The trophy was found last night.","The trophy","was","found"],
+  ["People play songs at parties.","Songs are played at parties.","Songs","are","played"],
+  ["A student broke the window.","The window was broken by a student.","The window","was","broken"],
+  ["Farmers grow coffee in Colombia.","Coffee is grown in Colombia.","Coffee","is","grown"],
+  ["Someone cleaned the windows yesterday.","The windows were cleaned yesterday.","The windows","were","cleaned"],
+  ["People write many books every year.","Many books are written every year.","Many books","are","written"]
+].map(a=>({type:"make",active:a[0],ans:a[1],rec:a[2],be:a[3],v3:a[4]}));
+
+const BUILD = [
+  "The meal is cooked by the chef.","The bicycle was stolen yesterday.","Spanish is spoken in Colombia.",
+  "The windows were cleaned yesterday.","Songs are played at parties.","The trophy was found last night.",
+  "Chocolate is made in Colombia.","The song was recorded in 1983."
+].map(s=>({type:"build",s}));
+
+const KICKERS = {detect:"Detective • elige la pasiva",fill:"Completa • is / are / was / were",make:"Makeover • activa → pasiva",build:"Arma la oración • ordena las piezas"};
+
+/* ============ UTILIDADES ============ */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle = a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const sample = (a,n)=>shuffle(a).slice(0,n);
+const norm = s=>s.toLowerCase().replace(/[.,!?;:"']/g,"").replace(/\s+/g," ").trim();
+const store = {
+  get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+
+/* Sonido */
+let actx=null;
+function beep(freq,dur,type){
+  if(!$("#useSound").checked)return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.type=type||"sine";o.frequency.value=freq;g.gain.value=.08;
+    o.connect(g);g.connect(actx.destination);o.start();
+    g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+dur);o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+const sfxOk=()=>{beep(660,.12);setTimeout(()=>beep(880,.18),110);};
+const sfxBad=()=>{beep(220,.3,"sawtooth");};
+
+/* ============ ESTADO ============ */
+const S = {mode:"mix",teams:[],nTeams:1,qs:[],i:0,score:0,streak:0,bestStreak:0,correct:0,locked:false,tId:null,tLeft:0,tMax:0};
+
+/* ============ MENÚ ============ */
+document.querySelectorAll(".mode").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".mode").forEach(x=>x.classList.remove("sel"));
+  b.classList.add("sel");S.mode=b.dataset.mode;updateBest();
+}));
+function updateBest(){
+  const v=store.get("pvq_best_"+S.mode,0);
+  $("#bestPill").textContent=v?"🏆 Récord ("+S.mode+"): "+v:"Aún sin récord";
+}
+$("#players").addEventListener("change",()=>{
+  const n=+$("#players").value,box=$("#teamNames");
+  box.innerHTML="";
+  if(n>1){
+    box.classList.remove("hidden");
+    for(let i=1;i<=n;i++){
+      const inp=document.createElement("input");
+      inp.type="text";inp.maxLength=18;inp.placeholder="Equipo "+i;inp.value="Equipo "+i;inp.style.maxWidth="190px";
+      box.appendChild(inp);
+    }
+  }else box.classList.add("hidden");
+});
+$("#startBtn").addEventListener("click",startGame);
+$("#againBtn").addEventListener("click",startGame);
+$("#menuBtn").addEventListener("click",()=>show("menu"));
+$("#quitBtn").addEventListener("click",()=>{stopTimer();show("menu");});
+$("#nextBtn").addEventListener("click",next);
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&S.locked&&!$("#nextBtn").classList.contains("hidden")){e.preventDefault();next();}
+});
+
+function show(id){
+  ["menu","game","end"].forEach(s=>$("#"+s).classList.toggle("hidden",s!==id));
+  if(id==="menu")updateBest();
+  window.scrollTo(0,0);
+}
+
+/* ============ PARTIDA ============ */
+function buildQuestions(mode){
+  if(mode==="detect")return sample(DETECT,10);
+  if(mode==="fill")return sample(FILL,10);
+  if(mode==="make")return sample(MAKE,10);
+  if(mode==="build")return sample(BUILD,8);
+  return shuffle([...sample(DETECT,3),...sample(FILL,3),...sample(MAKE,2),...sample(BUILD,2)]);
+}
+function startGame(){
+  S.nTeams=+$("#players").value;
+  S.teams=[];
+  if(S.nTeams>1){
+    const ins=[...document.querySelectorAll("#teamNames input")];
+    S.teams=ins.map((x,i)=>({name:(x.value.trim()||"Equipo "+(i+1)).slice(0,18),score:0,ok:0}));
+  }
+  S.qs=buildQuestions(S.mode);S.i=0;S.score=0;S.streak=0;S.bestStreak=0;S.correct=0;
+  show("game");renderQ();
+}
+function curTeam(){return S.nTeams>1?S.teams[S.i%S.nTeams]:null;}
+
+function renderQ(){
+  const q=S.qs[S.i];S.locked=false;
+  $("#fb").innerHTML="";$("#nextBtn").classList.add("hidden");
+  $("#hudQ").textContent=(S.i+1)+"/"+S.qs.length;
+  $("#prog").style.width=(S.i/S.qs.length*100)+"%";
+  $("#qKicker").textContent=KICKERS[q.type];
+  const t=curTeam(),ht=$("#hudTeam");
+  if(t){ht.classList.remove("hidden");ht.textContent="Turno: "+t.name;}else ht.classList.add("hidden");
+  updateHud();renderScoreboard();
+  ({detect:rDetect,fill:rFill,make:rMake,build:rBuild})[q.type](q);
+  startTimer(q.type==="make"||q.type==="build"?45:25);
+}
+function updateHud(){$("#hudScore").textContent="⭐ "+S.score;$("#hudStreak").textContent="🔥 "+S.streak;}
+function renderScoreboard(){
+  const sb=$("#scoreboard");
+  if(S.nTeams<2){sb.classList.add("hidden");return;}
+  sb.classList.remove("hidden");
+  sb.innerHTML="<table><tr><th>Equipo</th><th>Puntos</th><th>Aciertos</th></tr>"+
+    S.teams.map(t=>"<tr><td>"+esc(t.name)+"</td><td>"+t.score+"</td><td>"+t.ok+"</td></tr>").join("")+"</table>";
+}
+
+/* Timer */
+function startTimer(sec){
+  stopTimer();
+  const bar=$("#timerBar"),t=$("#timer");
+  if(!$("#useTimer").checked){bar.classList.add("hidden");return;}
+  bar.classList.remove("hidden");
+  S.tMax=sec;S.tLeft=sec;t.style.width="100%";t.classList.remove("low");
+  S.tId=setInterval(()=>{
+    S.tLeft-=0.25;
+    t.style.width=Math.max(0,S.tLeft/S.tMax*100)+"%";
+    t.classList.toggle("low",S.tLeft/S.tMax<.25);
+    if(S.tLeft<=0){stopTimer();if(!S.locked)timeout();}
+  },250);
+}
+function stopTimer(){if(S.tId){clearInterval(S.tId);S.tId=null;}}
+function timeout(){
+  const q=S.qs[S.i];
+  let right="";
+  if(q.type==="detect")right=q.opts[q.ans];
+  if(q.type==="fill")right=q.s.replace("___",q.ans.toUpperCase());
+  if(q.type==="make")right=q.ans;
+  if(q.type==="build")right=q.s;
+  finish({ok:false,partial:0,timeout:true,right});
+}
+
+/* ---- Detective ---- */
+function rDetect(q){
+  const order=shuffle([0,1,2]);
+  $("#qArea").innerHTML='<div class="q-title">Which sentence is passive?</div>'+
+    order.map((o,k)=>'<button class="choice" data-o="'+o+'"><span class="n">'+(k+1)+'</span>'+esc(q.opts[o])+'</button>').join("");
+  document.querySelectorAll("#qArea .choice").forEach(b=>b.addEventListener("click",()=>{
+    if(S.locked)return;
+    const o=+b.dataset.o,ok=o===q.ans;
+    document.querySelectorAll("#qArea .choice").forEach(x=>{
+      x.disabled=true;
+      if(+x.dataset.o===q.ans)x.classList.add("ok");
+    });
+    if(!ok)b.classList.add("bad");
+    finish({ok,partial:0,right:q.opts[q.ans],
+      note:"Pista: en la pasiva el receptor va primero → <b>receiver + BE + V3</b>."});
+  }));
+}
+
+/* ---- Completa ---- */
+function rFill(q){
+  const html=esc(q.s).replace("___",'<span style="color:var(--orange)">______</span>');
+  $("#qArea").innerHTML='<div class="q-sent">'+html+'</div><div class="fillrow">'+
+    ["is","are","was","were"].map(w=>'<button class="choice" data-w="'+w+'">'+w+'</button>').join("")+'</div>';
+  document.querySelectorAll("#qArea .choice").forEach(b=>b.addEventListener("click",()=>{
+    if(S.locked)return;
+    const ok=b.dataset.w===q.ans;
+    document.querySelectorAll("#qArea .choice").forEach(x=>{x.disabled=true;if(x.dataset.w===q.ans)x.classList.add("ok");});
+    if(!ok)b.classList.add("bad");
+    const why={is:"presente + sujeto singular",are:"presente + sujeto plural",was:"pasado + sujeto singular",were:"pasado + sujeto plural"}[q.ans];
+    finish({ok,partial:0,right:q.s.replace("___",q.ans.toUpperCase()),
+      note:"Clave: "+why+" → <b>"+q.ans+"</b>. Busca palabras de tiempo (yesterday, last night, every day…)."});
+  }));
+}
+
+/* ---- Makeover ---- */
+function rMake(q){
+  $("#qArea").innerHTML='<div class="q-title">Rewrite in the passive voice:</div>'+
+    '<div class="q-sent">'+esc(q.active)+'</div>'+
+    '<input type="text" id="mkIn" placeholder="Escribe la oración pasiva…" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+    '<div class="mt"><button class="btn" id="mkBtn">Revisar</button></div>';
+  const inp=$("#mkIn");inp.focus();
+  const check=()=>{
+    if(S.locked)return;
+    const val=inp.value.trim();
+    if(!val){inp.focus();return;}
+    const u=norm(val),base=norm(q.ans);
+    const noAgent=norm(val.replace(/\s+by\s+(the\s+|a\s+|an\s+)?\w+/i,""));
+    const ok=u===base||noAgent===base;
+    const cRec=u.startsWith(norm(q.rec)),
+          cBe=new RegExp("\\b"+q.be+"\\b").test(u),
+          cV3=new RegExp("\\b"+q.v3+"\\b").test(u);
+    const partial=ok?0:(cRec+cBe+cV3)/3;
+    inp.disabled=true;$("#mkBtn").disabled=true;
+    const chk='<div class="checks"><span>'+(cRec?"✅":"❌")+' Receiver: '+esc(q.rec)+'</span><span>'+(cBe?"✅":"❌")+
+      ' BE: '+q.be+'</span><span>'+(cV3?"✅":"❌")+' V3: '+q.v3+'</span></div>';
+    finish({ok,partial,right:q.ans,extra:chk,
+      note:"Pasos: 1) encuentra el receiver, 2) elige BE (tiempo + singular/plural), 3) añade V3. El agente (“by …”) es opcional."});
+  };
+  $("#mkBtn").addEventListener("click",check);
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();check();}});
+}
+
+/* ---- Arma la oración ---- */
+function rBuild(q){
+  const words=q.s.replace(/\.$/,"").split(" ");
+  let order=shuffle(words.map((w,i)=>({w,id:i})));
+  let guard=0;
+  while(order.map(x=>x.w).join(" ")===words.join(" ")&&guard++<10)order=shuffle(order);
+  const picked=[];
+  $("#qArea").innerHTML='<div class="q-title">Build the passive sentence:</div>'+
+    '<div class="formula"><span class="r">RECEIVER</span><span class="b">BE</span><span class="v">V3</span></div>'+
+    '<div class="lbl">Tu oración</div><div class="chips ans" id="bAns"></div>'+
+    '<div class="lbl">Piezas</div><div class="chips bank" id="bBank"></div>'+
+    '<div class="mt row"><button class="btn" id="bCheck">Revisar</button><button class="btn ghost" id="bReset">Reiniciar</button></div>';
+  const draw=()=>{
+    $("#bAns").innerHTML="";$("#bBank").innerHTML="";
+    picked.forEach(p=>{
+      const c=document.createElement("button");c.className="chip in";c.textContent=p.w;
+      c.addEventListener("click",()=>{if(S.locked)return;picked.splice(picked.indexOf(p),1);draw();});
+      $("#bAns").appendChild(c);
+    });
+    order.filter(o=>!picked.includes(o)).forEach(o=>{
+      const c=document.createElement("button");c.className="chip";c.textContent=o.w;
+      c.addEventListener("click",()=>{if(S.locked)return;picked.push(o);draw();});
+      $("#bBank").appendChild(c);
+    });
+  };
+  draw();
+  $("#bReset").addEventListener("click",()=>{if(S.locked)return;picked.length=0;draw();});
+  $("#bCheck").addEventListener("click",()=>{
+    if(S.locked||!picked.length)return;
+    const ok=picked.map(p=>p.w).join(" ")===words.join(" ");
+    $("#bCheck").disabled=true;$("#bReset").disabled=true;
+    document.querySelectorAll("#bAns .chip,#bBank .chip").forEach(c=>c.disabled=true);
+    finish({ok,partial:0,right:q.s,note:"Orden: <b>receiver → BE → V3</b> (+ by agent / lugar / tiempo)."});
+  });
+}
+
+/* ============ RESULTADO DE PREGUNTA ============ */
+function finish(r){
+  if(S.locked)return;
+  S.locked=true;
+  const timeLeftRatio=$("#useTimer").checked&&!r.timeout?Math.max(0,S.tLeft/S.tMax):0;
+  stopTimer();
+  let pts=0;
+  if(r.ok){
+    S.streak++;S.bestStreak=Math.max(S.bestStreak,S.streak);S.correct++;
+    pts=100+Math.round(timeLeftRatio*50)+Math.min(S.streak-1,5)*10;
+    sfxOk();
+  }else{
+    S.streak=0;
+    pts=Math.round((r.partial||0)*60);
+    sfxBad();
+  }
+  S.score+=pts;
+  const t=curTeam();
+  if(t){t.score+=pts;if(r.ok)t.ok++;}
+  updateHud();renderScoreboard();
+  let cls=r.ok?"ok":(pts>0?"part":"bad");
+  let head=r.ok?"✅ Correct! +"+pts:(r.timeout?"⏰ Se acabó el tiempo":(pts>0?"🟠 Casi: +"+pts:"❌ Not quite"));
+  $("#fb").innerHTML='<div class="feedback '+cls+'">'+head+
+    (r.ok?"":'<span class="ans">'+esc(r.right)+'</span>')+(r.extra||"")+
+    (r.note?"<small>"+r.note+"</small>":"")+"</div>";
+  const nb=$("#nextBtn");nb.classList.remove("hidden");
+  nb.textContent=S.i+1>=S.qs.length?"Ver resultado 🏁":"Siguiente →";
+  nb.focus();
+}
+function next(){
+  if(!S.locked)return;
+  S.i++;
+  if(S.i>=S.qs.length)return endGame();
+  renderQ();
+}
+
+/* ============ FIN ============ */
+function endGame(){
+  stopTimer();
+  const total=S.qs.length,pct=S.correct/total;
+  const stars=pct>=.9?3:pct>=.6?2:pct>=.3?1:0;
+  $("#endStars").textContent="⭐".repeat(stars)+"☆".repeat(3-stars);
+  $("#endTitle").textContent=pct>=.9?"¡Passive master! 🏆":pct>=.6?"¡Muy bien!":"¡Sigue practicando!";
+  $("#endScore").textContent=S.score;
+  $("#endDetail").textContent=S.correct+" de "+total+" correctas • Mejor racha: "+S.bestStreak;
+  const key="pvq_best_"+S.mode,prev=store.get(key,0);
+  if(S.score>prev){store.set(key,S.score);if(prev>0)$("#endDetail").textContent+=" • 🎉 ¡Nuevo récord!";}
+  const et=$("#endTeams");
+  if(S.nTeams>1){
+    const sorted=S.teams.slice().sort((a,b)=>b.score-a.score);
+    et.innerHTML='<h2>🏅 Ganador: '+esc(sorted[0].name)+'</h2><table><tr><th>#</th><th>Equipo</th><th>Puntos</th></tr>'+
+      sorted.map((t,i)=>"<tr><td>"+(i+1)+"</td><td>"+esc(t.name)+"</td><td>"+t.score+"</td></tr>").join("")+"</table>";
+  }else et.innerHTML="";
+  show("end");
+}
+
+updateBest();
+</script>
+</body>
+</html>
